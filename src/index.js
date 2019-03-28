@@ -72,7 +72,7 @@ const subscribe = (state, channelRoot, channelKey = null) => {
 
 /**
  * Change the mode for the mam state
- * @param {object} state 
+ * @param {object} state
  * @param {string} mode [public/private/restricted]
  * @param {string} sidekey, required for restricted mode
  * @returns {object} Updated state object to be used with future actions.
@@ -177,17 +177,20 @@ const fetch = async (root, selectedMode, sidekey, callback, limit) => {
         do {
             let reader = new Reader(ctx, client, mode, nextRoot, sidekey || '')
             const message = await reader.next()
-            hasMessage = message && message.value && message.value[0]
+            hasMessage = message && message.value && message.value.length
             if (hasMessage) {
-                nextRoot = message.value[0].message.nextRoot
-                const payload = message.value[0].message.payload
+                let msg = message.value[0].message;
+                nextRoot = msg.nextRoot
+                const payload = msg.payload
+                const tag = msg.tag
+                const timestamp = msg.timestamp
 
                 // Push payload into the messages array
-                messages.push(payload)
+                messages.push({ payload, tag, timestamp })
 
                 // Call callback function if provided
                 if (callback) {
-                    callback(payload)
+                    callback({ payload, tag, timestamp })
                 }
             }
         } while (!!hasMessage && messages.length < localLimit)
@@ -208,7 +211,9 @@ const fetch = async (root, selectedMode, sidekey, callback, limit) => {
 const fetchSingle = async (root, selectedMode, sidekey) => {
     const response = await fetch(root, selectedMode, sidekey, undefined, 1)
     return response && response.nextRoot ? {
-        payload: response.messages && response.messages.length === 1 ? response.messages[0] : undefined,
+        payload: response.messages && response.messages.length === 1 ? response.messages[0].payload : undefined,
+        tag: response.messages && response.messages.length === 1 ? response.messages[0].tag : undefined,
+        timestamp: response.messages && response.messages.length === 1 ? response.messages[0].timestamp : undefined,
         nextRoot: response.nextRoot
     } : response
 }
