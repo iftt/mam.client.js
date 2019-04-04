@@ -152,7 +152,7 @@ const getRoot = state => Mam.getMamRoot(state.seed, state.channel)
  */
 const decode = (payload, sidekey, root) => {
     const key = typeof sidekey === 'string' ? sidekey.padEnd(81, '9') : sidekey
-    Mam.decodeMessage(payload, key, root)
+    return Mam.decodeMessage(payload, key, root)
 }
 
 /**
